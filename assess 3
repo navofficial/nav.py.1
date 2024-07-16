@@ -1,0 +1,58 @@
+import requests
+import json
+import time
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+# Google Maps API Key
+API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"
+
+# Define the desired area for traffic monitoring
+# Example: New York City
+latitude = 40.7128
+longitude = -74.0060
+radius = 5000  # radius in meters
+
+# Define the traffic conditions we want to monitor
+traffic_conditions = ["UNKNOWN", "LOW", "MEDIUM", "HIGH", "SEVERE"]
+
+# Function to fetch traffic data from Google Maps API
+def get_traffic_data():
+    url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={latitude},{longitude}&destinations={latitude},{longitude}&mode=driving&departure_time=now&traffic_model=best_guess&key={API_KEY}"
+    response = requests.get(url)
+    data = json.loads(response.text)
+
+    # Extract traffic information from the API response
+    try:
+        traffic_level = data['rows'][0]['elements'][0]['status']
+        return traffic_conditions.index(traffic_level)
+    except KeyError:
+        return None
+
+# Function to update the plot with real-time traffic data
+def update_plot(frame):
+    traffic_data = get_traffic_data()
+    if traffic_data is not None:
+        ax.cla()
+        ax.bar(traffic_conditions, [traffic_data])
+        ax.set_xlabel("Traffic Conditions")
+        ax.set_ylabel("Traffic Level")
+        ax.set_title("Real-Time Traffic Monitoring")
+        ax.set_ylim(0, len(traffic_conditions))
+    return ax,
+
+# Create the plot
+fig, ax = plt.subplots()
+
+# Set the initial plot with empty data
+ax.set_xlabel("Traffic Conditions")
+ax.set_ylabel("Traffic Level")
+ax.set_title("Real-Time Traffic Monitoring")
+ax.set_ylim(0, len(traffic_conditions))
+ax.bar(traffic_conditions, [0])
+
+# Start the animation
+ani = FuncAnimation(fig, update_plot, interval=10000, blit=True)
+
+# Show the plot
+plt.show()
