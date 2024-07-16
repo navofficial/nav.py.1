@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # Google Maps API Key
-API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"
+API_KEY = "AIzaSyD_jA7ABwQSizxPzXyQe0ibuhPBmRQX_nA"
 
 # Define the desired area for traffic monitoring
 # Example: New York City
