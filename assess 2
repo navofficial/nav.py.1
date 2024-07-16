@@ -1,100 +1,87 @@
-import sqlite3
+class Product:
+    def _init_(self, product_id, name, price, category, supplier):
+        self.product_id = product_id
+        self.name = name
+        self.price = price
+        self.category = category
+        self.supplier = supplier
 
-class InventoryManagementSystem:
-    def __init__(self, db_file="inventory.db"):
-        self.db_file = db_file
-        self.conn = sqlite3.connect(db_file)
-        self.create_tables()
 
-    def create_tables(self):
-        # Example: Creating tables for inventory and orders
-        cursor = self.conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS inventory (
-                item_id INTEGER PRIMARY KEY,
-                item_name TEXT NOT NULL,
-                quantity INTEGER NOT NULL,
-                price REAL NOT NULL
-            )
-        ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS orders (
-                order_id INTEGER PRIMARY KEY,
-                item_id INTEGER NOT NULL,
-                quantity INTEGER NOT NULL,
-                order_date TEXT NOT NULL,
-                FOREIGN KEY (item_id) REFERENCES inventory (item_id)
-            )
-        ''')
-        self.conn.commit()
+class Warehouse:
+    def _init_(self, warehouse_id, address, capacity):
+        self.warehouse_id = warehouse_id
+        self.address = address
+        self.capacity = capacity
 
-    def add_item(self, item_name, quantity, price):
-        cursor = self.conn.cursor()
-        cursor.execute('''
-            INSERT INTO inventory (item_name, quantity, price)
-            VALUES (?, ?, ?)
-        ''', (item_name, quantity, price))
-        self.conn.commit()
 
-    def remove_item(self, item_name, quantity):
-        cursor = self.conn.cursor()
-        cursor.execute('''
-            UPDATE inventory
-            SET quantity = quantity - ?
-            WHERE item_name = ?
-        ''', (quantity, item_name))
-        self.conn.commit()
+class StockLevel:
+    def _init_(self, product, warehouse, quantity, expiration_date=None):
+        self.product = product
+        self.warehouse = warehouse
+        self.quantity = quantity
+        self.expiration_date = expiration_date
 
-    def search_item(self, query):
-        cursor = self.conn.cursor()
-        cursor.execute('''
-            SELECT * FROM inventory
-            WHERE item_name LIKE ?
-        ''', ('%' + query + '%',))
-        return cursor.fetchall()
 
-    def get_stock_levels(self):
-        cursor = self.conn.cursor()
-        cursor.execute('''
-            SELECT item_name, quantity FROM inventory
-        ''')
-        return cursor.fetchall()
+class InventoryTracker:
+    def _init_(self):
+        self.products = []
+        self.warehouses = []
+        self.stock_levels = []
 
-    def process_order(self, item_name, quantity, order_date):
-        cursor = self.conn.cursor()
-        # Example: Assuming an order inserts into the orders table
-        cursor.execute('''
-            INSERT INTO orders (item_id, quantity, order_date)
-            SELECT item_id, ?, ?
-            FROM inventory
-            WHERE item_name = ?
-        ''', (quantity, order_date, item_name))
-        self.remove_item(item_name, quantity)  # Updating inventory after order
-        self.conn.commit()
+    def add_product(self, product):
+        self.products.append(product)
 
-    def generate_report(self, report_type):
-        # Placeholder for generating different types of reports
-        pass
+    def add_warehouse(self, warehouse):
+        self.warehouses.append(warehouse)
 
-    def close_connection(self):
-        self.conn.close()
+    def add_stock_level(self, stock_level):
+        self.stock_levels.append(stock_level)
 
-# Example usage:
-if __name__ == "__main__":
-    inventory_system = InventoryManagementSystem()
-    
-    # Adding items to inventory
-    inventory_system.add_item("Laptop", 10, 1200)
-    inventory_system.add_item("Mouse", 50, 25)
-    
-    # Processing an order
-    inventory_system.process_order("Laptop", 2, "2024-07-16")
-    
-    # Retrieving stock levels
-    stock_levels = inventory_system.get_stock_levels()
-    print("Current Stock Levels:")
-    for item in stock_levels:
-        print(f"{item[0]}: {item[1]}")
-    
-    # Closing the database connection
-    inventory_system.close_connection()
+    def get_stock_level(self, product_id):
+        stock_level = next(
+            (sl for sl in self.stock_levels if sl.product.product_id == product_id), None
+        )
+        return stock_level.quantity if stock_level else 0
+
+    def get_reorder_recommendations(self, threshold):
+        recommendations = []
+        for stock_level in self.stock_levels:
+            if stock_level.quantity < threshold:
+                recommendations.append(stock_level.product)
+        return recommendations
+
+
+# Example usage
+inventory_tracker = InventoryTracker()
+
+# Add products
+product1 = Product("P1", "Product 1", 10.99, "Category 1", "Supplier 1")
+product2 = Product("P2", "Product 2", 15.99, "Category 2", "Supplier 2")
+inventory_tracker.add_product(product1)
+inventory_tracker.add_product(product2)
+
+# Add warehouses
+warehouse1 = Warehouse("W1", "Address 1", 1000)
+warehouse2 = Warehouse("W2", "Address 2", 500)
+inventory_tracker.add_warehouse(warehouse1)
+inventory_tracker.add_warehouse(warehouse2)
+
+# Add stock levels
+stock_level1 = StockLevel(product1, warehouse1, 50)
+stock_level2 = StockLevel(product2, warehouse1, 20)
+stock_level3 = StockLevel(product1, warehouse2, 30)
+inventory_tracker.add_stock_level(stock_level1)
+inventory_tracker.add_stock_level(stock_level2)
+inventory_tracker.add_stock_level(stock_level3)
+
+# Check stock level for a product
+product_id = "P1"
+stock_level = inventory_tracker.get_stock_level(product_id)
+print(f"Stock level for product {product_id}: {stock_level}")
+
+# Get reorder recommendations
+threshold = 40
+recommendations = inventory_tracker.get_reorder_recommendations(threshold)
+print("Reorder recommendations:")
+for product in recommendations:
+    print(f"- {product.name}")
