@@ -1,0 +1,100 @@
+import sqlite3
+
+class InventoryManagementSystem:
+    def __init__(self, db_file="inventory.db"):
+        self.db_file = db_file
+        self.conn = sqlite3.connect(db_file)
+        self.create_tables()
+
+    def create_tables(self):
+        # Example: Creating tables for inventory and orders
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS inventory (
+                item_id INTEGER PRIMARY KEY,
+                item_name TEXT NOT NULL,
+                quantity INTEGER NOT NULL,
+                price REAL NOT NULL
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS orders (
+                order_id INTEGER PRIMARY KEY,
+                item_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL,
+                order_date TEXT NOT NULL,
+                FOREIGN KEY (item_id) REFERENCES inventory (item_id)
+            )
+        ''')
+        self.conn.commit()
+
+    def add_item(self, item_name, quantity, price):
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            INSERT INTO inventory (item_name, quantity, price)
+            VALUES (?, ?, ?)
+        ''', (item_name, quantity, price))
+        self.conn.commit()
+
+    def remove_item(self, item_name, quantity):
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            UPDATE inventory
+            SET quantity = quantity - ?
+            WHERE item_name = ?
+        ''', (quantity, item_name))
+        self.conn.commit()
+
+    def search_item(self, query):
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT * FROM inventory
+            WHERE item_name LIKE ?
+        ''', ('%' + query + '%',))
+        return cursor.fetchall()
+
+    def get_stock_levels(self):
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT item_name, quantity FROM inventory
+        ''')
+        return cursor.fetchall()
+
+    def process_order(self, item_name, quantity, order_date):
+        cursor = self.conn.cursor()
+        # Example: Assuming an order inserts into the orders table
+        cursor.execute('''
+            INSERT INTO orders (item_id, quantity, order_date)
+            SELECT item_id, ?, ?
+            FROM inventory
+            WHERE item_name = ?
+        ''', (quantity, order_date, item_name))
+        self.remove_item(item_name, quantity)  # Updating inventory after order
+        self.conn.commit()
+
+    def generate_report(self, report_type):
+        # Placeholder for generating different types of reports
+        pass
+
+    def close_connection(self):
+        self.conn.close()
+
+# Example usage:
+if __name__ == "__main__":
+    inventory_system = InventoryManagementSystem()
+    
+    # Adding items to inventory
+    inventory_system.add_item("Laptop", 10, 1200)
+    inventory_system.add_item("Mouse", 50, 25)
+    
+    # Processing an order
+    inventory_system.process_order("Laptop", 2, "2024-07-16")
+    
+    # Retrieving stock levels
+    stock_levels = inventory_system.get_stock_levels()
+    print("Current Stock Levels:")
+    for item in stock_levels:
+        print(f"{item[0]}: {item[1]}")
+    
+    # Closing the database connection
+    inventory_system.close_connection()
