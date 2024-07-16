@@ -1,57 +1,68 @@
-import requests
-from datetime import datetime
-import time
-import json
+# import required modules
+import requests, json
 
-# OpenWeatherMap API key - Replace with your own API key
-API_KEY = "cf80d641aeeda7c7ee483d7c11c2ce04"
+# Enter your API key here
+api_key = "e932854329308aca7b1a97e59f54800d"
 
-# Location coordinates (latitude and longitude)
-LATITUDE = "YOUR_LATITUDE"
-LONGITUDE = "YOUR_LONGITUDE"
+# base_url variable to store url
+base_url = "http://api.openweathermap.org/data/2.5/weather?"
 
-# Weather data URL
-WEATHER_URL = f"https://api.openweathermap.org/data/2.5/weather?lat={LATITUDE}&lon={LONGITUDE}&appid={API_KEY}&units=metric"
+# Give city name
+city_name = input("Enter city name : ")
 
-def get_weather_data():
-  """Fetches weather data from OpenWeatherMap API."""
-  response = requests.get(WEATHER_URL)
-  if response.status_code == 200:
-    return response.json()
-  else:
-    print("Error fetching weather data.")
-    return None
+# complete_url variable to store
+# complete url address
+complete_url = base_url + "appid=" + api_key + "&q=" + city_name
 
-def format_weather_data(data):
-  """Formats weather data for display."""
-  if data:
-    temp = data["main"]["temp"]
-    feels_like = data["main"]["feels_like"]
-    description = data["weather"][0]["description"]
-    humidity = data["main"]["humidity"]
-    wind_speed = data["wind"]["speed"]
-    
-    timestamp = datetime.fromtimestamp(data["dt"])
-    formatted_timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-    
-    weather_info = f"""
-      Current Weather:
-      Timestamp: {formatted_timestamp}
-      Temperature: {temp:.1f}°C
-      Feels Like: {feels_like:.1f}°C
-      Description: {description}
-      Humidity: {humidity}%
-      Wind Speed: {wind_speed} m/s
-    """
-    return weather_info
-  else:
-    return "No weather data available."
+# get method of requests module
+# return response object
+response = requests.get(complete_url)
 
-# Main loop for real-time monitoring
-while True:
-  weather_data = get_weather_data()
-  formatted_weather = format_weather_data(weather_data)
-  print(formatted_weather)
+# json method of response object
+# convert json format data into
+# python format data
+x = response.json()
 
-  # Update weather data every 60 seconds
-  time.sleep(60)
+# Now x contains list of nested dictionaries
+# Check the value of "cod" key is equal to
+# "404", means city is found otherwise,
+# city is not found
+if x["cod"] != "404":
+
+    # store the value of "main"
+    # key in variable y
+    y = x["main"]
+
+    # store the value corresponding
+    # to the "temp" key of y
+    current_temperature = y["temp"]
+
+    # store the value corresponding
+    # to the "pressure" key of y
+    current_pressure = y["pressure"]
+
+    # store the value corresponding
+    # to the "humidity" key of y
+    current_humidity = y["humidity"]
+
+    # store the value of "weather"
+    # key in variable z
+    z = x["weather"]
+
+    # store the value corresponding
+    # to the "description" key at
+    # the 0th index of z
+    weather_description = z[0]["description"]
+
+    # print following values
+    print(" Temperature (in kelvin unit) = " +
+                    str(current_temperature) +
+        "\n atmospheric pressure (in hPa unit) = " +
+                    str(current_pressure) +
+        "\n humidity (in percentage) = " +
+                    str(current_humidity) +
+        "\n description = " +
+                    str(weather_description))
+
+else:
+    print(" City Not Found ")
