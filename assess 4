@@ -12,7 +12,7 @@ def get_covid_data(country="India"):
   Returns:
     A dictionary containing the latest COVID-19 data for the specified country, or None if no data is found.
   """
-  url = "https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_daily_reports/"
+  url = "https://covid-19-data.p.rapidapi.com/country/code?"
   today = datetime.today().strftime("%m-%d-%Y")
   file_path = f"{today}.csv"
   response = requests.get(f"{url}{file_path}")
