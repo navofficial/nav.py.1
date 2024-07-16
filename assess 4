@@ -1,0 +1,55 @@
+import requests
+import json
+from datetime import datetime
+from tabulate import tabulate
+
+def get_covid_data(country="India"):
+  """Fetches real-time COVID-19 data from the Johns Hopkins CSSEGISandData repository.
+
+  Args:
+    country: The country for which to retrieve data. Defaults to "India".
+
+  Returns:
+    A dictionary containing the latest COVID-19 data for the specified country, or None if no data is found.
+  """
+  url = "https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_daily_reports/"
+  today = datetime.today().strftime("%m-%d-%Y")
+  file_path = f"{today}.csv"
+  response = requests.get(f"{url}{file_path}")
+  if response.status_code == 200:
+    data = response.text.splitlines()
+    # Process CSV data
+    for line in data[1:]:
+      row = line.split(",")
+      if row[3] == country:
+        return {
+          "Country": row[3],
+          "Confirmed": int(row[4]),
+          "Deaths": int(row[5]),
+          "Recovered": int(row[6]),
+          "Last Updated": today
+        }
+  return None
+
+def display_data(data):
+  """Displays the retrieved COVID-19 data in a tabular format.
+
+  Args:
+    data: A dictionary containing the COVID-19 data.
+  """
+  if data:
+    table_data = [
+      ["Country", data["Country"]],
+      ["Confirmed Cases", data["Confirmed"]],
+      ["Deaths", data["Deaths"]],
+      ["Recovered", data["Recovered"]],
+      ["Last Updated", data["Last Updated"]]
+    ]
+    print(tabulate(table_data, headers=["Metric", "Value"], tablefmt="grid"))
+  else:
+    print("No data found for the specified country.")
+
+if __name__ == "__main__":
+  country = input("Enter country: ")
+  data = get_covid_data(country)
+  display_data(data)
