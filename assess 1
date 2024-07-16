@@ -4,7 +4,7 @@ import time
 import json
 
 # OpenWeatherMap API key - Replace with your own API key
-API_KEY = "YOUR_API_KEY"
+API_KEY = "cf80d641aeeda7c7ee483d7c11c2ce04"
 
 # Location coordinates (latitude and longitude)
 LATITUDE = "YOUR_LATITUDE"
